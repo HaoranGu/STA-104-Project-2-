@@ -28,5 +28,7 @@ library(coin)
 ### Part 2
 ```{r}
 mind.data = read.csv("Mind.csv")
+mind.table = table(mind.data)
+mind.table
 ```
 
