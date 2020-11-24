@@ -2,7 +2,7 @@
 title: "Project 2"
 author: "Jingcong Jiang and Haoran Gu"
 output: html_document
-
+---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
@@ -26,3 +26,7 @@ library(coin)
 
 
 ### Part 2
+```{r}
+mind.data = read.csv("Mind.csv")
+```
+
