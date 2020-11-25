@@ -32,3 +32,19 @@ mind.table = table(mind.data)
 mind.table
 ```
 
+```{r}
+mind.test = chisq.test(mind.data$Treatment, mind.data$Improve, correct = FALSE)
+```
+
+```{r}
+eij = mind.test$expected
+
+eij
+```
+
+```{r}
+chi.sq.obs = as.numeric(mind.test$statistic)
+
+chi.sq.obs
+```
+
