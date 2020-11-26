@@ -368,9 +368,101 @@ summary {
 </div>
 
 
-<div id="part-2" class="section level3">
-<h3>Part 2</h3>
-<pre class="r"><code>mind.data = read.csv(&quot;Mind.csv&quot;)</code></pre>
+<div id="part-2" class="section level2">
+<h2>Part 2</h2>
+<pre class="r"><code>mind.data = read.csv(&quot;Mind.csv&quot;)
+mind.table = table(mind.data)
+mind.table</code></pre>
+<pre><code>##             Improve
+## Treatment    Major Mild Moderate None
+##   Medication    33   55       12  102
+##   Therapy       22   12        6   24</code></pre>
+<pre class="r"><code>summary(mind.data)</code></pre>
+<pre><code>##       Treatment       Improve   
+##  Medication:202   Major   : 55  
+##  Therapy   : 64   Mild    : 67  
+##                   Moderate: 18  
+##                   None    :126</code></pre>
+<div id="state-the-null-and-alternative-hypothesis-first" class="section level3">
+<h3>State the null and alternative hypothesis first</h3>
+<div id="ho-treatment-and-improvement-are-independent-for-patients" class="section level4">
+<h4>Ho: Treatment and Improvement are independent for patients</h4>
+</div>
+<div id="ha-treatment-and-improvement-are-dependent-for-patients" class="section level4">
+<h4>Ha: Treatment and Improvement are dependent for patients</h4>
+<pre class="r"><code>mind.test = chisq.test(mind.data$Treatment, mind.data$Improve, correct = FALSE)</code></pre>
+<pre><code>## Warning in chisq.test(mind.data$Treatment, mind.data$Improve, correct = FALSE):
+## Chi-squared approximation may be incorrect</code></pre>
+<pre class="r"><code>mind.test</code></pre>
+<pre><code>## 
+##  Pearson&#39;s Chi-squared test
+## 
+## data:  mind.data$Treatment and mind.data$Improve
+## X-squared = 11.615, df = 3, p-value = 0.008826</code></pre>
+<pre class="r"><code>eij = mind.test$expected
+
+eij</code></pre>
+<pre><code>##                    mind.data$Improve
+## mind.data$Treatment    Major    Mild  Moderate     None
+##          Medication 41.76692 50.8797 13.669173 95.68421
+##          Therapy    13.23308 16.1203  4.330827 30.31579</code></pre>
+<pre class="r"><code>chi.sq.obs = as.numeric(mind.test$statistic)
+
+chi.sq.obs</code></pre>
+<pre><code>## [1] 11.6149</code></pre>
+</div>
+</div>
+<div id="do-permutations-and-calculate-the-permutation-based-p-value-here-use-r-5000" class="section level3">
+<h3>Do permutations and calculate the permutation-based p value, here use R = 5000</h3>
+<pre class="r"><code>chisq_test(Treatment ~ Improve, mind.data, distribution = approximate(nresample = 5000))</code></pre>
+<pre><code>## 
+##  Approximative Pearson Chi-Squared Test
+## 
+## data:  Treatment by Improve (Major, Mild, Moderate, None)
+## chi-squared = 11.615, p-value = 0.0088</code></pre>
+<div id="use-alpha-0.01-our-pvalue-is-less-than-alpha.-so-we-reject-ho.-we-are-99-confident-that-treatment-and-improvement-are-dependent-for-patients." class="section level4">
+<h4>Use alpha = 0.01, our pvalue is less than alpha. So we reject Ho. We are 99% confident that Treatment and Improvement are dependent for patients.</h4>
+</div>
+</div>
+<div id="do-pair-wise-comparison-to-check-which-specific-subcategories-are-dependent" class="section level3">
+<h3>Do pair-wise comparison to check which specific subcategories are dependent</h3>
+<pre class="r"><code>n = sum(mind.table)
+ni. = rowSums(mind.table)
+n.j = colSums(mind.table)
+all.pjG1 = mind.table[1,]/ni.[1] #all conditional probabilites for row 1
+all.pjG2= mind.table[2,]/ni.[2] #all conditional probabilites for row 2
+all.pbar = n.j/n #all probabilities regardless of group
+all.Zij = c(all.pjG1 - all.pjG2)/sqrt(all.pbar*(1-all.pbar)*(1/ni.[1] + 1/ni.[2])) #The z-test-statistics</code></pre>
+<pre class="r"><code>R = 5000
+r.perms.cutoff = sapply(1:R,function(i){
+  perm.data = mind.data
+  perm.data$Improve = sample(perm.data$Improve,nrow(perm.data),replace = FALSE)
+  row.sum = rowSums(table(perm.data))
+  col.sum = colSums(table(perm.data))
+  all.pji = table(perm.data)[1,]/row.sum[1]
+  all.pji.= table(perm.data)[2,]/row.sum[2]
+  all.pbar = col.sum/sum(row.sum)
+  all.Zij = c(all.pji - all.pji.)/sqrt(all.pbar*(1-all.pbar)*(1/row.sum[1] + 1/row.sum[2]))
+  Q.r = max(abs(all.Zij))
+  return(Q.r)
+})
+alpha = 0.01
+cutoff.q = as.numeric(quantile(r.perms.cutoff,(1-alpha)))
+cutoff.q</code></pre>
+<pre><code>## [1] 2.963534</code></pre>
+<pre class="r"><code>all.Zij = matrix(all.Zij,nrow=  1)
+colnames(all.Zij) = c(&quot;Major&quot;,&quot;Mild&quot;,&quot;Moderate&quot;,&quot;None&quot;)
+rownames(all.Zij) = c(&quot;Medication vs. Therapy&quot;)
+all.Zij</code></pre>
+<pre><code>##                           Major     Mild   Moderate     None
+## Medication vs. Therapy -3.10514 1.361513 -0.9532263 1.814409</code></pre>
+<div id="as-the-cutoff-is-2.934-this-suggests-that-therapy-as-a-treatment-has-more-major-improvement-on-patients." class="section level4">
+<h4>As the cutoff is 2.934, this suggests that Therapy as a treatment has more major improvement on patients.</h4>
+</div>
+<div id="according-to-the-sign-of-the-z-score-medication-treatment-has-more-mild-and-none-improvement-and-therapy-treatment-has-more-major-and-moderate-treatment." class="section level4">
+<h4>According to the sign of the Z score, Medication treatment has more mild and none improvement, and therapy treatment has more major and moderate treatment.</h4>
+</div>
+</div>
 </div>
 
 

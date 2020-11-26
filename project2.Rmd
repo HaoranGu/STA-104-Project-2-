@@ -25,15 +25,24 @@ library(coin)
 
 
 
-### Part 2
+## Part 2
 ```{r}
 mind.data = read.csv("Mind.csv")
 mind.table = table(mind.data)
 mind.table
 ```
+```{r}
+summary(mind.data)
+```
 
+### State the null and alternative hypothesis first
+
+#### Ho: Treatment and Improvement are independent for patients
+
+#### Ha: Treatment and Improvement are dependent for patients
 ```{r}
 mind.test = chisq.test(mind.data$Treatment, mind.data$Improve, correct = FALSE)
+mind.test
 ```
 
 ```{r}
@@ -47,4 +56,49 @@ chi.sq.obs = as.numeric(mind.test$statistic)
 
 chi.sq.obs
 ```
+### Do permutations and calculate the permutation-based p value, here use R = 5000 
 
+```{r}
+chisq_test(Treatment ~ Improve, mind.data, distribution = approximate(nresample = 5000))
+```
+#### Use alpha = 0.01, our pvalue is less than alpha. So we reject Ho. We are 99% confident that Treatment and Improvement are dependent for patients.
+
+### Do pair-wise comparison to check which specific subcategories are dependent
+```{r}
+n = sum(mind.table)
+ni. = rowSums(mind.table)
+n.j = colSums(mind.table)
+all.pjG1 = mind.table[1,]/ni.[1] #all conditional probabilites for row 1
+all.pjG2= mind.table[2,]/ni.[2] #all conditional probabilites for row 2
+all.pbar = n.j/n #all probabilities regardless of group
+all.Zij = c(all.pjG1 - all.pjG2)/sqrt(all.pbar*(1-all.pbar)*(1/ni.[1] + 1/ni.[2])) #The z-test-statistics
+```
+
+```{r}
+R = 5000
+r.perms.cutoff = sapply(1:R,function(i){
+  perm.data = mind.data
+  perm.data$Improve = sample(perm.data$Improve,nrow(perm.data),replace = FALSE)
+  row.sum = rowSums(table(perm.data))
+  col.sum = colSums(table(perm.data))
+  all.pji = table(perm.data)[1,]/row.sum[1]
+  all.pji.= table(perm.data)[2,]/row.sum[2]
+  all.pbar = col.sum/sum(row.sum)
+  all.Zij = c(all.pji - all.pji.)/sqrt(all.pbar*(1-all.pbar)*(1/row.sum[1] + 1/row.sum[2]))
+  Q.r = max(abs(all.Zij))
+  return(Q.r)
+})
+alpha = 0.01
+cutoff.q = as.numeric(quantile(r.perms.cutoff,(1-alpha)))
+cutoff.q
+```
+
+```{r}
+all.Zij = matrix(all.Zij,nrow=  1)
+colnames(all.Zij) = c("Major","Mild","Moderate","None")
+rownames(all.Zij) = c("Medication vs. Therapy")
+all.Zij
+```
+#### As the cutoff is 2.934, this suggests that Therapy as a treatment has more major improvement on patients.
+
+#### According to the sign of the Z score, Medication treatment has more mild and none improvement, and therapy treatment has more major and moderate treatment.
