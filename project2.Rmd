@@ -10,6 +10,60 @@ library(ggplot2)
 library(coin)
 ```
 
+### part1
+### First plot the data in order to get a first impression
+```{r}
+bacterial <- read.csv("bacterial.csv")
+
+table(bacterial$Method)
+table(bacterial$Method)/sum(table(bacterial$Method))
+
+boxplot(Bacterial.Counts ~ Method, data = bacterial, main = "Bacterial colonies by Washing method", horizontal = TRUE)
+ggplot(bacterial, aes(x = Bacterial.Counts)) + geom_histogram(binwidth = 8,color = "black",fill = "white") + facet_grid(Method ~.) +ggtitle("Bacterial colonies by Washing method")
+```
+
+### Use Kruskal-Wallis (K-W) Test and Wilcoxon Rank Sum test to do compare the methods
+### First create a table which contains general information of the data
+```{r}
+bacterial$Rank = rank(bacterial$Bacterial.Counts, ties = "average")
+Group.order = aggregate(Bacterial.Counts ~ Method, data = bacterial, mean)$Method
+Xi = aggregate(Bacterial.Counts ~ Method, data = bacterial, mean)$Bacterial.Counts
+si = aggregate(Bacterial.Counts ~ Method, data = bacterial, sd)$Bacterial.Counts
+Ri = aggregate(Rank ~ Method, data = bacterial, sd)$Rank
+ni = aggregate(Bacterial.Counts ~ Method, data = bacterial, length)$Bacterial.Counts
+results = rbind(Xi,si,Ri,ni)
+rownames(results) = c("Bacterial count Mean","Bacterical count SD","Rank Mean","Sample Size")
+colnames(results) = as.character(Group.order)
+results
+```
+### The result shows that alcohol spray is the most effective method to eliminate bacterial. But the effectiveness of the other three methods is not clear.
+
+```{r}
+#Antibacterial Soap vs Soap
+new.data1 = bacterial[c(3,7,16,23,2,6,10,12,15,19,22,26),]
+new.data1$Rank = rank(new.data1$Bacterial.Counts, ties = "average")
+wilcox_test(Bacterial.Counts ~ as.factor(Method),new.data1, distribution = "exact",alternative = "less")
+```
+### We use alpha = 0.05 for the test
+### P-value > 0.05, this suggests that the differences between Antibacterial Soap and Soap method are not clear.
+
+```{r}
+#Antibacterial Soap vs water
+new.data2 = bacterial[c(3,7,16,23,1,5,9,14,18,21,25),]
+new.data2$Rank = rank(new.data2$Bacterial.Counts, ties = "average")
+wilcox_test(Bacterial.Counts ~ as.factor(Method),new.data2, distribution = "exact",alternative = "less")
+```
+### P-value < 0.05, this suggests that the bacterial count left using Antibacterial Soap is less than the bacterial count left using water.
+
+```{r}
+#Soap vs water
+new.data3 = bacterial[c(2,6,10,12,15,19,22,26,1,5,9,14,18,21,25),]
+new.data3$Rank = rank(new.data3$Bacterial.Counts, ties = "average")
+wilcox_test(Bacterial.Counts ~ as.factor(Method),new.data3, distribution = "exact",alternative = "less")
+```
+### P-value > 0.05, this suggests that the differences between Soap and Water method are not clear.
+
+### Even though effectiveness between Antibacterial Soap vs Soap method, and Soap vs Water method is not clear, the result of the contrast between Antibacterial Soap and water gives us a hint. It suggests that Antibacterial Soap is somehow the best washing method among these three methods, while Water is somehow the worst.
 
 
 
