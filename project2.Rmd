@@ -15,11 +15,8 @@ library(coin)
 ```{r}
 bacterial <- read.csv("bacterial.csv")
 
-table(bacterial$Method)
-table(bacterial$Method)/sum(table(bacterial$Method))
-
-boxplot(Bacterial.Counts ~ Method, data = bacterial, main = "Bacterial colonies by Washing method", horizontal = TRUE)
-ggplot(bacterial, aes(x = Bacterial.Counts)) + geom_histogram(binwidth = 8,color = "black",fill = "white") + facet_grid(Method ~.) +ggtitle("Bacterial colonies by Washing method")
+boxplot(Bacterial.Counts ~ Method, data = bacterial, main = "Boxplot of Bacterial colonies by Washing method", horizontal = TRUE)
+ggplot(bacterial, aes(x = Bacterial.Counts)) + geom_histogram(binwidth = 8,color = "black",fill = "white") + facet_grid(Method ~.) +ggtitle("Histogram of Bacterial colonies by Washing method")
 ```
 
 ### Use Kruskal-Wallis (K-W) Test and Wilcoxon Rank Sum test to do compare the methods
@@ -32,7 +29,7 @@ si = aggregate(Bacterial.Counts ~ Method, data = bacterial, sd)$Bacterial.Counts
 Ri = aggregate(Rank ~ Method, data = bacterial, sd)$Rank
 ni = aggregate(Bacterial.Counts ~ Method, data = bacterial, length)$Bacterial.Counts
 results = rbind(Xi,si,Ri,ni)
-rownames(results) = c("Bacterial count Mean","Bacterical count SD","Rank Mean","Sample Size")
+rownames(results) = c("Bacterial count Mean","Bacterial count SD","Rank Mean","Sample Size")
 colnames(results) = as.character(Group.order)
 results
 ```
